@@ -4,7 +4,7 @@ Internal IT Support Ticket System built for real operational workflows.
 
 A full-stack application that manages support tickets with priority levels, status tracking, categories, and filtering. Designed around the kind of day-to-day IT support work done in dealerships and corporate environments.
 
-**Live Demo:** *(Deploy to Vercel and paste the link here)*
+**Live Demo:** 
 
 ---
 
