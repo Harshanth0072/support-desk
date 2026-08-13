@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Ticket, TicketFilters, Status, Priority, Category } from "@/types/ticket";
-import { getTickets, saveTickets, generateTicketId } from "@/lib/storage";
 import DashboardStats from "@/components/DashboardStats";
 import TicketForm from "@/components/TicketForm";
 import TicketList from "@/components/TicketList";
@@ -10,6 +9,8 @@ import FilterBar from "@/components/FilterBar";
 
 export default function HomePage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<TicketFilters>({
     status: "all",
     priority: "all",
@@ -18,9 +19,23 @@ export default function HomePage() {
   });
   const [showForm, setShowForm] = useState(false);
 
-  useEffect(() => {
-    setTickets(getTickets());
+  const fetchTickets = useCallback(async () => {
+    try {
+      setError(null);
+      const res = await fetch("/api/tickets");
+      if (!res.ok) throw new Error("Failed to load tickets");
+      const data = await res.json();
+      setTickets(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
 
   const filteredTickets = useMemo(() => {
     return tickets.filter((t) => {
@@ -40,34 +55,82 @@ export default function HomePage() {
     });
   }, [tickets, filters]);
 
-  const handleCreate = (data: {
+  const handleCreate = async (data: {
     title: string;
     description: string;
     priority: Priority;
     category: Category;
     requester: string;
   }) => {
-    const now = new Date().toISOString();
-    const newTicket: Ticket = {
-      id: generateTicketId(tickets),
-      ...data,
-      status: "open",
-      createdAt: now,
-      updatedAt: now,
-    };
-    const updated = [newTicket, ...tickets];
-    setTickets(updated);
-    saveTickets(updated);
-    setShowForm(false);
+    try {
+      const res = await fetch("/api/tickets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to create ticket");
+      }
+
+      const newTicket = await res.json();
+      setTickets((prev) => [newTicket, ...prev]);
+      setShowForm(false);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to create ticket");
+    }
   };
 
-  const handleStatusChange = (id: string, status: Status) => {
-    const updated = tickets.map((t) =>
-      t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t
+  const handleStatusChange = async (id: string, status: Status) => {
+    // Optimistic update
+    setTickets((prev) =>
+      prev.map((t) =>
+        t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t
+      )
     );
-    setTickets(updated);
-    saveTickets(updated);
+
+    try {
+      const res = await fetch(`/api/tickets/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!res.ok) {
+        // Revert on failure
+        await fetchTickets();
+        throw new Error("Failed to update status");
+      }
+
+      const updated = await res.json();
+      setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <div className="text-slate-500">Loading tickets...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+        <p className="text-red-700 font-medium">{error}</p>
+        <button
+          onClick={fetchTickets}
+          className="mt-3 text-sm text-red-600 underline hover:no-underline"
+        >
+          Try again
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
