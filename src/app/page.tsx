@@ -47,7 +47,7 @@ export default function HomePage() {
         const match =
           t.title.toLowerCase().includes(q) ||
           t.description.toLowerCase().includes(q) ||
-          t.id.toLowerCase().includes(q) ||
+          t.ticketId.toLowerCase().includes(q) ||
           t.requester.toLowerCase().includes(q);
         if (!match) return false;
       }
@@ -82,29 +82,28 @@ export default function HomePage() {
     }
   };
 
-  const handleStatusChange = async (id: string, status: Status) => {
+  const handleStatusChange = async (ticketId: string, status: Status) => {
     // Optimistic update
     setTickets((prev) =>
       prev.map((t) =>
-        t.id === id ? { ...t, status, updatedAt: new Date().toISOString() } : t
+        t.ticketId === ticketId ? { ...t, status, updatedAt: new Date().toISOString() } : t
       )
     );
 
     try {
-      const res = await fetch(`/api/tickets/${id}`, {
+      const res = await fetch(`/api/tickets/${ticketId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
       });
 
       if (!res.ok) {
-        // Revert on failure
         await fetchTickets();
         throw new Error("Failed to update status");
       }
 
       const updated = await res.json();
-      setTickets((prev) => prev.map((t) => (t.id === id ? updated : t)));
+      setTickets((prev) => prev.map((t) => (t.ticketId === ticketId ? updated : t)));
     } catch (err) {
       console.error(err);
     }

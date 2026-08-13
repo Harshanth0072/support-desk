@@ -3,7 +3,7 @@ import { formatDistanceToNow } from "date-fns";
 
 interface Props {
   ticket: Ticket;
-  onStatusChange: (id: string, status: Status) => void;
+  onStatusChange: (ticketId: string, status: Status) => void;
 }
 
 const priorityStyles: Record<string, string> = {
@@ -26,7 +26,7 @@ export default function TicketCard({ ticket, onStatusChange }: Props) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex-1 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono text-xs font-medium text-slate-500">{ticket.id}</span>
+            <span className="font-mono text-xs font-medium text-slate-500">{ticket.ticketId}</span>
             <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityStyles[ticket.priority]}`}>
               {ticket.priority}
             </span>
@@ -55,7 +55,7 @@ export default function TicketCard({ ticket, onStatusChange }: Props) {
         <div className="flex-shrink-0">
           <select
             value={ticket.status}
-            onChange={(e) => onStatusChange(ticket.id, e.target.value as Status)}
+            onChange={(e) => onStatusChange(ticket.ticketId, e.target.value as Status)}
             className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:border-blue-500 focus:outline-none"
           >
             <option value="open">Open</option>

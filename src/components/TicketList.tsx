@@ -3,7 +3,7 @@ import TicketCard from "./TicketCard";
 
 interface Props {
   tickets: Ticket[];
-  onStatusChange: (id: string, status: Status) => void;
+  onStatusChange: (ticketId: string, status: Status) => void;
 }
 
 export default function TicketList({ tickets, onStatusChange }: Props) {
@@ -18,7 +18,7 @@ export default function TicketList({ tickets, onStatusChange }: Props) {
   return (
     <div className="space-y-3">
       {tickets.map((ticket) => (
-        <TicketCard key={ticket.id} ticket={ticket} onStatusChange={onStatusChange} />
+        <TicketCard key={ticket.ticketId} ticket={ticket} onStatusChange={onStatusChange} />
       ))}
     </div>
   );
