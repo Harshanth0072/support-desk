@@ -1,10 +1,10 @@
 # SupportDesk
 
-Internal IT Support Ticket System built for real operational workflows.
+Internal IT Support Ticket System with real database persistence.
 
-A full-stack application that manages support tickets with priority levels, status tracking, categories, and filtering. Designed around the kind of day-to-day IT support work done in dealerships and corporate environments.
+Full-stack application built with **Next.js 14**, **TypeScript**, **Prisma**, and **PostgreSQL**. Designed around real IT support workflows used in dealerships and corporate environments.
 
-**Live Demo:** 
+**Live Demo:** *(Add your Vercel link here after deploying)*
 
 ---
 
@@ -18,88 +18,116 @@ A full-stack application that manages support tickets with priority levels, stat
 - Search + filter by status, priority and category
 - Optimistic UI updates
 - REST API backend
+- Persistent PostgreSQL database via Prisma
 
 ## Tech Stack
 
-| Layer        | Technology                  |
-|--------------|-----------------------------|
-| Frontend     | Next.js 14 (App Router)     |
-| Language     | TypeScript                  |
-| Styling      | Tailwind CSS                |
-| Backend      | Next.js Route Handlers      |
-| Persistence  | JSON file store (server)    |
-| Icons        | Lucide React                |
+| Layer        | Technology                          |
+|--------------|-------------------------------------|
+| Frontend     | Next.js 14 (App Router) + TypeScript |
+| Styling      | Tailwind CSS                        |
+| Backend      | Next.js Route Handlers              |
+| ORM          | Prisma                              |
+| Database     | PostgreSQL (Vercel Postgres / Neon / Supabase) |
+| Icons        | Lucide React                        |
 
 ## Architecture
 
 ```
 src/
 ├── app/
-│   ├── api/
-│   │   └── tickets/
-│   │       ├── route.ts          # GET all, POST create
-│   │       └── [id]/route.ts     # GET / PATCH / DELETE by id
+│   ├── api/tickets/          # REST API
 │   ├── layout.tsx
-│   └── page.tsx                 # Dashboard (client)
-├── components/
-│   ├── DashboardStats.tsx
-│   ├── FilterBar.tsx
-│   ├── TicketCard.tsx
-│   ├── TicketForm.tsx
-│   └── TicketList.tsx
+│   └── page.tsx              # Dashboard
+├── components/               # UI components
 ├── lib/
-│   └── tickets.ts               # Server-side data access layer
-└── types/
-    └── ticket.ts
+│   ├── prisma.ts             # Prisma client singleton
+│   └── tickets.ts            # Data access layer
+└── types/ticket.ts
 
-data/
-└── tickets.json                  # Persistent ticket store
+prisma/
+├── schema.prisma
+└── seed.ts
 ```
 
-### API Endpoints
+## Getting Started (Local)
 
-| Method | Endpoint            | Description              |
-|--------|---------------------|--------------------------|
-| GET    | `/api/tickets`      | List all tickets         |
-| POST   | `/api/tickets`      | Create a new ticket      |
-| GET    | `/api/tickets/[id]` | Get single ticket        |
-| PATCH  | `/api/tickets/[id]` | Update ticket fields     |
-| DELETE | `/api/tickets/[id]` | Delete a ticket          |
-
-## Getting Started
+### 1. Clone & install
 
 ```bash
 git clone https://github.com/Harshanth0072/support-desk.git
 cd support-desk
 npm install
+```
+
+### 2. Set up the database
+
+Create a free PostgreSQL database (recommended options):
+
+- [Vercel Postgres](https://vercel.com/storage/postgres) (easiest if deploying to Vercel)
+- [Neon](https://neon.tech) (free tier, excellent)
+- [Supabase](https://supabase.com) (free tier)
+
+Copy the connection string, then:
+
+```bash
+cp .env.example .env
+# Edit .env and paste your DATABASE_URL
+```
+
+### 3. Push schema & seed data
+
+```bash
+npx prisma db push
+npm run db:seed
+```
+
+### 4. Run the app
+
+```bash
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
 
-## Design Decisions
+---
 
-- **Server-side persistence** instead of localStorage so the data layer is real and can be swapped for a database later.
-- **Optimistic updates** on status changes for better UX.
-- **Typed domain model** (`Ticket`, `Priority`, `Status`, `Category`) kept separate from UI.
-- **Clear separation** between API routes, data access layer (`lib/tickets.ts`), and React components.
+## Deploy to Vercel + Vercel Postgres
 
-## Limitations (Current)
+1. Push this repo to GitHub (already done).
+2. Go to [vercel.com](https://vercel.com) → **Add New Project** → Import `support-desk`.
+3. In the project, go to **Storage** → **Create Database** → **Postgres**.
+4. Connect the database to your project. Vercel automatically adds `DATABASE_URL`.
+5. Redeploy the project (or trigger a new deployment).
+6. After deploy, run the seed once:
 
-- Persistence uses a JSON file on the server (fine for local/demo use).
-- No authentication yet.
-- Single-user for now (no role-based access).
+```bash
+# From your local machine with the production DATABASE_URL
+npx prisma db push
+npm run db:seed
+```
 
-These are intentional starting points. The architecture is structured so each of them can be replaced without rewriting the whole app.
+Or use Vercel CLI:
 
-## Roadmap
+```bash
+npx vercel env pull .env.local
+npx prisma db push
+npm run db:seed
+```
 
-- [ ] Replace JSON store with Prisma + SQLite / PostgreSQL
-- [ ] Add authentication (NextAuth or Clerk)
-- [ ] Role-based access (Requester vs Agent)
-- [ ] Email / Slack notifications on status change
-- [ ] File attachments
-- [ ] Activity / audit log
+---
+
+## API Endpoints
+
+| Method | Endpoint            | Description          |
+|--------|---------------------|----------------------|
+| GET    | `/api/tickets`      | List all tickets     |
+| POST   | `/api/tickets`      | Create ticket        |
+| GET    | `/api/tickets/[id]` | Get single ticket    |
+| PATCH  | `/api/tickets/[id]` | Update ticket        |
+| DELETE | `/api/tickets/[id]` | Delete ticket        |
+
+---
 
 ## Author
 
@@ -109,4 +137,4 @@ IT Support Executive · Porsche Centre Oman
 
 ---
 
-Built to reflect real IT support workflows, not as a tutorial exercise.
+Built to reflect real IT support workflows with a proper database layer.
