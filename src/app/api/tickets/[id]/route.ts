@@ -22,9 +22,9 @@ export async function GET(_request: NextRequest, { params }: Params) {
 export async function PATCH(request: NextRequest, { params }: Params) {
   try {
     const body = await request.json();
-    const allowed: (keyof typeof body)[] = ["status", "priority", "assignee", "title", "description"];
+    const allowed = ["status", "priority", "assignee", "title", "description"] as const;
 
-    const updates: Record<string, string> = {};
+    const updates: Record<string, any> = {};
     for (const key of allowed) {
       if (body[key] !== undefined) {
         updates[key] = body[key];
@@ -37,14 +37,14 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 
     if (updates.status) {
       const valid: Status[] = ["open", "in_progress", "resolved", "closed"];
-      if (!valid.includes(updates.status as Status)) {
+      if (!valid.includes(updates.status)) {
         return NextResponse.json({ error: "Invalid status" }, { status: 400 });
       }
     }
 
     if (updates.priority) {
       const valid: Priority[] = ["low", "medium", "high", "critical"];
-      if (!valid.includes(updates.priority as Priority)) {
+      if (!valid.includes(updates.priority)) {
         return NextResponse.json({ error: "Invalid priority" }, { status: 400 });
       }
     }
